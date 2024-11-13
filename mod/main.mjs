@@ -1,5 +1,5 @@
 // #region CONSTANTS
-const SERVER_HOST = 'http://localhost:3000';
+const SERVER_HOST = 'http://47.182.248.117:3000';
 const LOG_PREFIX = '[multiplayer] ';
 
 const IS_DEV_MODE = false;
