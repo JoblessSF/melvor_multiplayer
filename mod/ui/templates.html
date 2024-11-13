@@ -1,0 +1,1018 @@
+<template id="template-kru-multiplayer-online-button">
+	<div class="d-inline-block ml-1" id="kru-mm-online-button-container" @click="state.toggle_online_dropdown()">
+		<div class="kmm-notification-circle" v-if="state.num_notifications > 0">
+			{{ state.num_notifications }}
+		</div>
+		<button class="btn btn-sm btn-dual text-combat-smoke" id="kru-mm-online-button">
+			<img class="skill-icon-xxs" :src="state.get_svg('multiplayer')"/>
+		</button>
+	</div>
+</template>
+<template id="template-kru-multiplayer-dropdown">
+	<div class="dropdown-menu dropdown-menu-right p-0 border-0 font-size-sm" id="kru-mm-online-dropdown">
+		<div class="p-2" v-if="state.is_connected">
+			<h5 class="dropdown-header text-warning">
+				<lang-string lang-id="MOD_KMM_MENU_HEADER"></lang-string>
+			</h5>
+			<a class="dropdown-item pointer-enabled" @click.stop="state.show_icon_modal()">
+				<img class="skill-icon-xxs" :src="state.get_item_icon(state.profile_icon)"/>
+				<lang-string lang-id="MOD_KMM_MENU_CHANGE_ICON"></lang-string>
+			</a>
+			<h5 class="dropdown-header text-warning">
+				<lang-string lang-id="MOD_KMM_MENU_HEADER_FRIENDS"></lang-string>
+			</h5>
+			<a class="dropdown-item pointer-enabled" @click.stop="state.show_friends_modal()">
+				<lang-string lang-id="MOD_KMM_MENU_VIEW_FRIENDS"></lang-string>
+			</a>
+			<a class="dropdown-item pointer-enabled" @click.stop="state.show_friend_request_modal()">
+				<lang-string lang-id="MOD_KMM_MENU_SHOW_FRIEND_REQUESTS"></lang-string>
+				<span class="kmm-menu-notification-number" v-if="state.num_friend_requests > 0">{{ state.num_friend_requests }}</span>
+			</a>
+			<a class="dropdown-item pointer-enabled" @click.stop="state.show_add_friend_modal()">
+				<lang-string lang-id="MOD_KMM_MENU_ADD_FRIEND"></lang-string>
+			</a>
+			<a class="dropdown-item pointer-enabled" @click.stop="state.show_friend_code_modal()">
+				<lang-string lang-id="MOD_KMM_MENU_SHOW_FRIEND_CODE"></lang-string>
+			</a>
+			<h5 class="dropdown-header text-warning">
+				<lang-string lang-id="MOD_KMM_MENU_HEADER_TRADING"></lang-string>
+			</h5>
+			<a class="dropdown-item pointer-enabled" @click.stop="state.open_transfer_data_page()">
+				<lang-string lang-id="MOD_KMM_MENU_VIEW_TRADES"></lang-string>
+				<span class="kmm-menu-notification-number" v-if="state.num_transfer_offers > 0">{{ state.num_transfer_offers }}</span>
+			</a>
+			<h5 class="dropdown-header text-warning">
+				<lang-string lang-id="MOD_KMM_MENU_HEADER_MARKET"></lang-string>
+			</h5>
+			<a class="dropdown-item pointer-enabled" @click.stop="state.open_market_page('listing')">
+				<lang-string lang-id="MOD_KMM_MENU_VIEW_LISTING"></lang-string>
+				<span class="kmm-menu-notification-number" v-if="state.num_market_sold_items > 0">{{ state.num_market_sold_items }}</span>
+			</a>
+		</div>
+		<div class="p-2" v-else>
+			<h5 class="dropdown-header text-warning">
+				<lang-string lang-id="MOD_KMM_MENU_HEADER"></lang-string>
+			</h5>
+			<a class="dropdown-item" @click.stop="state.reconnect()">
+				<lang-string lang-id="MOD_KMM_MENU_RECONNECT"></lang-string>
+			</a>
+		</div>
+	</div>
+</template>
+<template id="template-kru-multiplayer-friend-code-modal">
+	<div class="kmm-modal-text">
+		<lang-string lang-id="MOD_KMM_MODAL_DESC_CODE"></lang-string>
+	</div>
+	<input class="kru-mm-input-text text-center" :value="state.friend_code" type="text"/>
+</template>
+<template id="template-kru-multiplayer-add-friend-modal">
+	<div class="kmm-modal-text">
+		<lang-string lang-id="MOD_KMM_MODAL_DESC_ADD_FRIEND"></lang-string>
+		<span id="kmm-modal-error" class="d-none text-danger"></span>
+	</div>
+	<input class="kru-mm-input-text text-center" type="text" id="kmm-add-friend-modal-field" maxlength="11"/>
+	<div class="kmm-modal-tray">
+		<button type="button" class="btn btn-primary" @click="state.add_friend($event)">
+			<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+			<lang-string lang-id="MOD_KMM_BUTTON_ADD_FRIEND"></lang-string>
+		</button>
+		<button type="button" class="btn btn-danger" @click="state.close_modal()">
+			<lang-string lang-id="MOD_KMM_BUTTON_CANCEL"></lang-string>
+		</button>
+	</div>
+</template>
+<template id="template-kru-multiplayer-friend-request-modal">
+	<div class="kmm-friend-requests" v-if="state.events.friend_requests.length > 0">
+		<div v-for="request in state.events.friend_requests" class="kmm-friend-request-bubble">
+			<img class="skill-icon-xs" :src="state.get_item_icon(request.friend.icon_id)"/>
+			<span class="mr-2">{{ request.friend.display_name }}</span>
+			<button type="button" class="btn btn-success" @click="state.accept_friend_request($event, request)">
+				<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+				<lang-string lang-id="MOD_KMM_BUTTON_ACCEPT_FRIEND"></lang-string>
+			</button>
+			<button type="button" class="btn btn-danger" @click="state.ignore_friend_request($event, request)">
+				<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+				<lang-string lang-id="MOD_KMM_BUTTON_IGNORE_FRIEND"></lang-string>
+			</button>
+		</div>
+	</div>
+	<div class="kmm-modal-text" v-else>
+		<lang-string lang-id="MOD_KMM_MODAL_NO_FRIEND_REQUESTS"></lang-string>
+	</div>
+</template>
+<template id="template-kru-multiplayer-friends-modal">
+	<div class="kmm-friends" v-if="state.friends.length > 0">
+		<div v-for="friend in state.friends" class="kmm-friend">
+			<img class="skill-icon-xs" :src="state.get_item_icon(friend.icon_id)"/>
+			<span>{{ friend.display_name }}</span>
+			<button type="button" class="btn btn-danger" @click="state.remove_friend_prompt(friend)">
+				<lang-string lang-id="MOD_KMM_BUTTON_REMOVE_FRIEND"></lang-string>
+			</button>
+		</div>
+	</div>
+	<div class="kmm-modal-text" v-else>
+		<lang-string lang-id="MOD_KMM_MODAL_NO_FRIENDS"></lang-string>
+	</div>
+</template>
+<template id="template-kru-multiplayer-remove-friend-modal">
+	<div class="kmm-modal-text">
+		<lang-string-f lang-id="MOD_KMM_MODAL_DESC_REMOVE_FRIEND" :lang-arg-1="state.removing_friend.display_name"></lang-string-f>
+	</div>
+	<button type="button" class="btn btn-success" @click="state.remove_friend($event)">
+		<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+		<lang-string lang-id="MOD_KMM_BUTTON_REMOVE_FRIEND_CONFIRM"></lang-string>
+	</button>
+	<button type="button" class="btn btn-danger" @click="state.close_modal()">
+		<lang-string lang-id="MOD_KMM_BUTTON_CANCEL"></lang-string>
+	</button>
+</template>
+<template id="template-kru-multiplayer-add-gp-modal">
+	<div class="form-group kmm-gp-group">
+		<kmm-gp-slider></kmm-gp-slider>
+	</div>
+	<div class="kmm-button-tray">
+		<button type="button" class="btn btn-success" @click="state.add_gp_to_transfer($event)">
+			<lang-string-f lang-id="MOD_KMM_BUTTON_ADD_GP_F" :lang-arg-1="state.add_gp_value_formatted"></lang-string-f>
+		</button>
+		<button type="button" class="btn btn-danger" @click="state.close_modal()">
+			<lang-string lang-id="MOD_KMM_BUTTON_CANCEL"></lang-string>
+		</button>
+	</div>
+</template>
+<template id="template-kru-multiplayer-campaign-contribute-modal">
+	<div class="form-group kmm-gp-group">
+		<kmm-item-slider :data-item-id="state.campaign_item_id"></kmm-item-slider>
+	</div>
+	<div class="kmm-button-tray">
+		<button type="button" class="btn btn-success" @click="state.contribute_to_campaign($event)">
+			<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+			<lang-string lang-id="MOD_KMM_BUTTON_CONTRIBUTE"></lang-string>
+		</button>
+		<button type="button" class="btn btn-danger" @click="state.close_modal()">
+			<lang-string lang-id="MOD_KMM_BUTTON_CANCEL"></lang-string>
+		</button>
+	</div>
+</template>
+<template id="template-kru-multiplayer-market-buy-modal">
+	<div class="form-group kmm-gp-group">
+		<kmm-item-slider :data-item-id="state.market_buy_item.item_id" :data-max="state.market_buy_item.available"></kmm-item-slider>
+	</div>
+	<div class="kmm-button-tray">
+		<button type="button" class="btn btn-success" @click="state.buy_market_item($event)">
+			<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+			<lang-string lang-id="MOD_KMM_BUTTON_MARKET_PURCHASE"></lang-string>
+			<img class="skill-icon-xxs ml-1 mr-1" src="assets/media/main/coins.svg">
+			<span>{{ state.market_buy_price_formatted }}</span>
+		</button>
+		<button type="button" class="btn btn-danger" @click="state.close_modal()">
+			<lang-string lang-id="MOD_KMM_BUTTON_CANCEL"></lang-string>
+		</button>
+	</div>
+</template>
+<template id="template-kru-multiplayer-change-icon-modal">
+	<input class="form-control" type="text" v-model="state.icon_search" placeholder="Search for an icon..."/>
+	<div class="kmm-icon-selector" v-if="state.filtered_icons.length > 0">
+		<div class="bank-item no-bg btn-light pointer-enabled m-1 resize-48" :class="{ 'kmm-icon-picked': icon.id == state.picked_icon }" v-for="icon in state.filtered_icons" @click="state.pick_icon(icon)">
+			<img class="p-2 resize-48" :src="icon.media">
+		</div>
+	</div>
+	<div class="kmm-modal-text mt-3" v-else>
+		<lang-string lang-id="MOD_KMM_MODAL_NO_ICONS"></lang-string>
+	</div>
+	<div class="kmm-button-tray">
+		<button type="button" class="btn btn-success" @click="state.confirm_icon_pick($event)">
+			<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+			<lang-string lang-id="MOD_KMM_BUTTON_USE_ICON"></lang-string>
+		</button>
+		<button type="button" class="btn btn-danger" @click="state.close_modal()">
+			<lang-string lang-id="MOD_KMM_BUTTON_CANCEL"></lang-string>
+		</button>
+	</div>
+</template>
+<template id="template-kru-multiplayer-bank-market-container">
+	<div class="col-12">
+		<div class="block block-rounded-double bg-combat-inner-dark">
+		<div class="block-header block-header-default bg-dark-bank-block-header px-3 py-1">
+			<h5 class="font-size-sm font-w600 mb-0">
+				<img class="skill-icon-xs mr-1" :src="state.get_svg('market')">
+				<lang-string lang-id="MOD_KMM_MARKET_BANK_HEADER"></lang-string>
+			</h5>
+		</div>
+		<div class="col-12 pt-2">
+			<div class="form-group">
+				<input type="text" id="kmm-market-slider">
+			</div>
+			<div class="row no-gutters p-2">
+				<div class="kmm-bank-market-fields">
+					<div>
+						<lang-string lang-id="MOD_KMM_MARKET_BANK_QTY"></lang-string>
+						<input type="number" min="0" class="form-control m-1" id="kmm-market-sell-amount" placeholder="Sell X">
+					</div>
+					<div>
+						<img class="skill-icon-xxs ml-1 mr-1" src="assets/media/main/coins.svg">
+						<lang-string lang-id="MOD_KMM_MARKET_BANK_PPI"></lang-string>
+						<input type="number" min="0" class="form-control m-1" id="kmm-market-sell-price" placeholder="Sell Price">
+					</div>
+				</div>
+				<div class="col-12">
+					<div class="dropdown-divider"></div>
+				</div>
+				<div class="col-12 text-center">
+					<button role="button" class="btn btn-danger m-1 w-75" id="kmm-market-sell-button">
+						<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+						<lang-string lang-id="MOD_KMM_BUTTON_SELL_ON_MARKET"></lang-string>
+					</button><br>
+				</div>
+			</div>
+		</div>
+		<div class="block-header block-header-default bg-dark-bank-block-header px-3 py-1 text-center">
+			<h5 class="font-w600 font-size-sm text-combat-smoke m-1 w-100">
+				<img class="skill-icon-xxs ml-1 mr-1" src="assets/media/main/coins.svg">
+				<span id="kmm-market-sell-value"></span>
+			</h5>
+		</div>
+	</div>
+</template>
+<template id="template-kru-multiplayer-bank-container">
+	<div class="col-12">
+		<div class="block block-rounded-double bg-combat-inner-dark">
+		<div class="block-header block-header-default bg-dark-bank-block-header px-3 py-1">
+			<h5 class="font-size-sm font-w600 mb-0">
+				<img class="skill-icon-xs mr-1" :src="state.get_svg('multiplayer')">
+				<lang-string lang-id="MOD_KMM_TITLE_TRANSFER_ITEM"></lang-string>
+			</h5>
+		</div>
+		<div class="col-12 pt-2">
+			<div class="form-group">
+				<input type="text" id="kmm-transfer-slider">
+			</div>
+			<div class="row no-gutters p-2">
+				<div class="col-12 col-xl-5">
+					<input type="number" min="0" class="form-control m-1" id="kmm-transfer-amount" placeholder="Transfer X">
+				</div>
+				<div class="col-12 col-xl-7 text-right">
+					<button role="button" class="btn btn-info m-1" id="kmm-transfer-all-but-1">
+						<lang-string lang-id="BANK_STRING_21"></lang-string>
+					</button>
+					<button role="button" class="btn btn-info m-1" id="kmm-transfer-all">
+						<lang-string lang-id="BANK_STRING_20"></lang-string>
+					</button>
+				</div>
+				<div class="col-12">
+					<div class="dropdown-divider"></div>
+				</div>
+				<div class="col-12 text-center">
+					<button role="button" class="btn btn-danger m-1 w-75" id="kmm-transfer-button">
+						<lang-string lang-id="MOD_KMM_BUTTON_TRANSFER_ITEM"></lang-string>
+					</button><br>
+				</div>
+			</div>
+		</div>
+		<div class="block-header block-header-default bg-dark-bank-block-header px-3 py-1 text-center">
+			<h5 class="font-w600 font-size-sm text-combat-smoke m-1 w-100">
+				<img class="skill-icon-xxs ml-1 mr-1" src="assets/media/main/coins.svg">
+				<span id="kmm-transfer-value">140 GP</span>
+			</h5>
+		</div>
+	</div>
+</template>
+<template id="template-kru-multiplayer-bank-tab">
+	<li class="nav-item">
+		<a class="nav-link" href="#bank-stats-tab">
+			<img class="skill-icon-xs m-1" src="assets/media/main/coins.svg">
+		</a>
+	</li>
+</template>
+<template id="template-kru-multiplayer-market-page">
+	<div class="content d-none" id="kru-multiplayer-market-page">
+		<div class="row row-deck gutters-tiny">
+			<div class="block block-rounded block-link-pop border-top kmm-market-border border-4x w-100">
+				<div class="row row-deck gutters-tiny">
+					<div class="p-3 kmm-transfer-info">
+						<img class="skill-icon-xxs mr-1" :src="state.get_svg('transfer_bag')">
+						<lang-string lang-id="MOD_KMM_MARKET_WINDOW_INFO"></lang-string>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row row-deck gutters-tiny kmm-market-tabs">
+			<div>
+				<a class="block block-content block-rounded block-link-pop border-top border-4x pointer-enabled p-2 pr-5" :class="state.market_active_tab == 'search' ? 'kmm-market-border-tab-active' : 'border-combat'" @click="state.open_market_tab()">
+					<div class="media d-flex align-items-center push">
+						<div class="mr-2">
+							<img class="bank-img p-2" :src="state.get_svg('market')">
+						</div>
+						<div class="media-body">
+							<div class="font-w600">
+								<lang-string lang-id="MOD_KMM_MARKET_TAB_PUBLIC"></lang-string>
+							</div>
+							<div class="font-size-sm">
+								<lang-string lang-id="MOD_KMM_MARKET_TAB_PUBLIC_SUB"></lang-string>
+							</div>
+						</div>
+					</div>
+				</a>
+			</div>
+			<div>
+				<a class="block block-content block-rounded block-link-pop border-top border-4x pointer-enabled p-2 pr-5" :class="state.market_active_tab == 'listing' ? 'kmm-market-border-tab-active' : 'border-combat'" @click="state.open_listing_tab()">
+					<div class="media d-flex align-items-center push">
+						<div class="mr-2">
+							<img class="bank-img p-2" :src="state.get_svg('market_listing')">
+						</div>
+						<div class="media-body">
+							<div class="font-w600">
+								<lang-string lang-id="MOD_KMM_MARKET_TAB_OWN"></lang-string>
+							</div>
+							<div class="font-size-sm">
+								<lang-string lang-id="MOD_KMM_MARKET_TAB_OWN_SUB"></lang-string>
+							</div>
+						</div>
+					</div>
+				</a>
+			</div>
+		</div>
+		<div v-if="state.market_active_tab == 'filter'">
+			<input type="text" id="kmm-market-filter-input" v-model="state.market_filter_search" placeholder="Search for items..." class="border-top border-4x">
+			<div id="kmm-market-filter-items">
+				<div v-for="item in state.market_filter_items_filtered" @click="state.select_market_filter_item(item.id)">
+					<img class="kmm-market-item-icon mr-3" :src="item.media">
+					<span>{{ item.name }}</span>
+				</div>
+			</div>
+		</div>
+		<div v-if="state.market_active_tab == 'search'">
+			<template v-if="state.market_filter_item != null">
+				<div class="kmm-market-filter border-top border-4x">
+					<lang-string lang-id="MOD_KMM_MARKET_SEARCH_ACTIVE" class="mr-1"></lang-string>
+					<div class="kmm-market-filter-item">
+						<img class="skill-icon-xxs mr-2" :src="state.get_item_icon(state.market_filter_item)">
+						<span>{{ state.get_item_name(state.market_filter_item) }}</span>
+					</div>
+					<div class="kmm-market-filter-clear" @click="state.clear_market_filter()">X</div>
+				</div>	
+			</template>
+			<template v-else>
+				<div class="kmm-market-filter border-top border-4x pointer-enabled" @click="state.choose_market_filter()">
+					<lang-string lang-id="MOD_KMM_MARKET_SEARCH" class="mr-1"></lang-string>
+				</div>
+			</template>
+			<button type="button" class="btn btn-info m-1 float-right" @click="state.toggle_market_sort()">
+				<lang-string lang-id="MOD_KMM_BUTTON_MARKET_SORT_ASC" v-if="state.market_sort_direction === 1"></lang-string>
+				<lang-string lang-id="MOD_KMM_BUTTON_MARKET_SORT_DESC" v-else></lang-string>
+			</button>
+			<div id="kmm-market-search-results" v-if="state.market_results.length > 0 && !state.market_search_loading">
+				<div class="kmm-market-search-result" v-for="item in state.market_results">
+					<div class="kmm-market-item-col">
+						<img class="kmm-market-item-icon mr-3" :src="state.get_item_icon(item.item_id)">
+						<span>{{ state.get_item_name(item.item_id) }}</span>
+					</div>
+					<div class="kmm-market-item-col">
+						<lang-string lang-id="MOD_KMM_MARKET_SOLD_BY" class="mr-2"></lang-string>
+						<img class="skill-icon-xs mr-2" :src="state.get_item_icon(item.seller.icon_id)"/>
+						<span>{{ item.seller.display_name }}</span>
+					</div>
+					<div class="kmm-market-item-col">
+						<lang-string-f lang-id="MOD_KMM_MARKET_AVAILABLE" :lang-arg-1="numberWithCommas(item.available)"></lang-string-f>
+					</div>
+					<div class="kmm-market-item-col">
+						<lang-string-f class="text-success" lang-id="MOD_KMM_MARKET_PRICE" :lang-arg-1="numberWithCommas(item.price)"></lang-string-f>
+						<img class="skill-icon-xxs ml-2" src="assets/media/main/coins.svg">
+					</div>
+					<div class="kmm-market-item-col">
+						<button type="button" class="btn btn-success m-1" @click="state.show_market_buy_modal(item)">
+							<lang-string lang-id="MOD_KMM_BUTTON_MARKET_BUY"></lang-string>
+						</button>
+					</div>
+				</div>
+			</div>
+			<div class="p-4 block" v-else-if="state.market_search_loading">
+				<lang-string lang-id="MOD_KMM_MARKET_LOADING"></lang-string>
+			</div>
+			<div class="p-4 block" v-else>
+				<lang-string lang-id="MOD_KMM_MARKET_NO_RESULTS"></lang-string>
+			</div>
+			<div id="kmm-market-pagation">
+				<button type="button" class="btn btn-info m-1" @click="state.market_page_first()">
+					<lang-string lang-id="MOD_KMM_BUTTON_PAGE_FIRST"></lang-string>
+				</button>
+				<button type="button" class="btn btn-info m-1 mr-5" @click="state.market_page_prev()">
+					<lang-string lang-id="MOD_KMM_BUTTON_PAGE_PREV"></lang-string>
+				</button>
+				<button type="button" class="btn btn-info m-1" v-for="page in state.market_page_count" @click="state.market_page(page)">
+					{{ page }}
+				</button>
+				<button type="button" class="btn btn-info m-1 ml-5" @click="state.market_page_next()">
+					<lang-string lang-id="MOD_KMM_BUTTON_PAGE_NEXT"></lang-string>
+				</button>
+				<button type="button" class="btn btn-info m-1" @click="state.market_page_last()">
+					<lang-string lang-id="MOD_KMM_BUTTON_PAGE_LAST"></lang-string>
+				</button>
+			</div>
+		</div>
+		<div v-if="state.market_active_tab == 'listing'">
+			<div id="kmm-market-search-results" v-if="state.market_listings.length > 0 && !state.market_listings_loading">
+				<div class="kmm-market-search-result kmm-market-listing-result" v-for="item in state.market_listings">
+					<div class="kmm-market-item-col">
+						<img class="kmm-market-item-icon mr-3" :src="state.get_item_icon(item.item_id)">
+						<span>{{ state.get_item_name(item.item_id) }}</span>
+					</div>
+					<div class="kmm-market-item-col">
+						<div class="kmm-market-item-bar">
+							<div class="kmm-market-item-bar-fill" :style="{ width: (((item.qty - item.available) / item.qty) * 100) + '%'  }" :class="{ complete: item.available == 0 }"></div>
+						</div>
+					</div>
+					<div class="kmm-market-item-col">
+						<lang-string-f lang-id="MOD_KMM_MARKET_SOLD" :lang-arg-1="numberWithCommas(item.qty - item.available)" :lang-arg-2="numberWithCommas(item.qty)"></lang-string-f>
+					</div>
+					<div class="kmm-market-item-col">
+						<lang-string-f lang-id="MOD_KMM_MARKET_PRICE" :lang-arg-1="numberWithCommas(item.price)"></lang-string-f>
+						<img class="skill-icon-xxs ml-2" src="assets/media/main/coins.svg">
+					</div>
+					<div class="kmm-market-item-col">
+						<lang-string-f class="text-success" lang-id="MOD_KMM_MARKET_PROFIT" :lang-arg-1="numberWithCommas((item.price * (item.qty - item.available)) - item.payout)"></lang-string-f>
+						<img class="skill-icon-xxs ml-2" src="assets/media/main/coins.svg">
+					</div>
+					<div class="kmm-market-item-col">
+						<button type="button" class="btn btn-success m-1" @click="state.resolve_market_listing($event, item, false)" :class="{ disabled: ((item.price * (item.qty - item.available)) - item.payout) == 0 }" :key="item.id">
+							<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+							<lang-string lang-id="MOD_KMM_BUTTON_MARKET_CLAIM_PAYOUT"></lang-string>
+						</button>
+						<button type="button" class="btn btn-danger m-1" @click="state.resolve_market_listing($event, item, true)" :key="item.id">
+							<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+							<lang-string lang-id="MOD_KMM_BUTTON_MARKET_CANCEL"></lang-string>
+						</button>
+					</div>
+				</div>
+			</div>
+			<div class="p-4 block" v-else-if="state.market_listings_loading">
+				<lang-string lang-id="MOD_KMM_MARKET_LOADING"></lang-string>
+			</div>
+			<div class="p-4 block" v-else>
+				<lang-string lang-id="MOD_KMM_MARKET_NO_LISTINGS"></lang-string>
+			</div>
+		</div>
+	</div>
+</template>
+<template id="template-kru-multiplayer-campaign-page">
+	<div class="content d-none" id="kru-multiplayer-campaign-page">
+		<div class="row row-deck gutters-tiny">
+			<div class="block block-rounded block-link-pop border-top kmm-campaign-border border-4x w-100">
+				<div class="row row-deck gutters-tiny">
+					<div class="p-3 kmm-transfer-info">
+						<img class="skill-icon-xxs mr-1" :src="state.get_svg('campaigns')">
+						<lang-string lang-id="MOD_KMM_CAMPAIGN_WINDOW_INFO"></lang-string>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row row-deck gutters-tiny" v-if="state.campaign_loading || !state.campaign_has_data">
+			<div class="block block-rounded block-link-pop w-100">
+				<div class="row row-deck gutters-tiny">
+					<div class="p-3">
+						<div class="kmm-campaign-active">
+							<img class="mr-1 kmm-grayscale" :src="state.get_svg('campaign_placeholder')">
+							<h4 class="font-w600">
+								<lang-string lang-id="MOD_KMM_CAMPAIGN_LOADING"></lang-string>
+							</h4>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row row-deck gutters-tiny" v-else-if="!state.campaign_active">
+			<div class="block block-rounded block-link-pop w-100">
+				<div class="row row-deck gutters-tiny">
+					<div class="p-3">
+						<div class="kmm-campaign-active">
+							<img class="mr-1 kmm-grayscale" :src="state.get_svg('campaign_placeholder')">
+							<div class="kmm-campaign-active-text">
+								<h4 class="font-w600">
+									<lang-string lang-id="MOD_KMM_CAMPAIGN_NONE"></lang-string>
+								</h4>
+								<lang-string-f lang-id="MOD_KMM_CAMPAIGN_NEXT" :lang-arg-1="state.campaign_next_formatted"></lang-string-f>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row row-deck gutters-tiny" v-else>
+			<div class="block block-rounded block-link-pop w-100">
+				<div class="row row-deck gutters-tiny w-100">
+					<div class="p-3 w-100">
+						<div class="kmm-campaign-active w-100">
+							<img class="mr-1" :src="state.get_current_campaign_svg()">
+							<div class="kmm-campaign-active-info w-100">
+								<h4 class="font-w600 mb-1">
+									<lang-string-f lang-id="MOD_KMM_CAMPAIGN_CURRENT" :lang-arg-1="state.get_current_campaign_title()"></lang-string-f>
+								</h4>
+								<div class="kmm-campaign-bar">
+									<div class="kmm-campaign-bar-fill" :style="{ 'background-color': state.get_current_campaign_color(), width: (state.campaign_pct * 100) + '%' }"></div>
+								</div>
+								<div class="kmm-campaign-info">
+									<div>
+										<lang-string-f lang-id="MOD_KMM_CAMPAIGN_PROGRESS" :lang-arg-1="state.campaign_item_name" :lang-arg-2="numberWithCommas(state.campaign_item_current)" :lang-arg-3="numberWithCommas(state.campaign_item_total)"></lang-string-f>
+										<img class="skill-icon-xxs ml-1 mr-1" :src="state.campaign_item_icon">
+									</div>
+									<div>
+										<lang-string-f lang-id="MOD_KMM_CAMPAIGN_CONTRIB_AMOUNT" :lang-arg-1="numberWithCommas(state.campaign_contribution)"></lang-string-f>
+										<img class="skill-icon-xxs ml-1 mr-1" :src="state.campaign_item_icon">
+										<lang-string class="ml-1" lang-id="MOD_KMM_CAMPAIGN_MAX_REACHED" v-if="state.campaign_max_solo_contrib_reached"></lang-string>
+									</div>
+									<button type="button" class="btn btn-success m-1" @click="state.show_campaign_contribute_modal()" v-if="!state.campaign_max_solo_contrib_reached">
+										<lang-string lang-id="MOD_KMM_BUTTON_CONTRIBUTE"></lang-string>
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="kmm-campaign-rankings" v-if="state.campaign_has_data">
+			<div v-for="(value, key) in state.campaign_data">
+				<div class="kmm-ranking-medals">
+					 <img :src="state.get_svg('medal_bronze')" :class="{ 'kmm-blackout': state.get_campaign_ranking(key) < 1 }">
+					 <img :src="state.get_svg('medal_silver')" :class="{ 'kmm-blackout': state.get_campaign_ranking(key) < 2 }">
+					 <img :src="state.get_svg('medal_gold')" :class="{ 'kmm-blackout': state.get_campaign_ranking(key) < 3 }">
+					 <img :src="state.get_pet_icon(value.pet)" :class="{ 'kmm-blackout': state.get_campaign_ranking(key) < 4 }">
+				</div>
+				<img class="kmm-ranking-icon" :src="state.get_campaign_svg(key)">
+			</div>
+		</div>
+		<div class="row row-deck gutters-tiny mt-4">
+			<div class="block block-rounded block-link-pop border-top kmm-campaign-border border-4x w-100">
+				<div class="row row-deck gutters-tiny">
+					<div class="p-3 kmm-transfer-info">
+						<img class="skill-icon-xxs mr-1" :src="state.get_item_icon('melvorF:Bobbys_Pocket')">
+						<lang-string lang-id="MOD_KMM_CAMPAIGN_HISTORY_INFO"></lang-string>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="block tabbable w-100 kmm-col mb-2" v-for="campaign of state.campaign_history">
+			<div class="kmm-campaign-history">
+				<div>
+					<img class="mr-2 kmm-campaign-history-icon" :src="state.get_campaign_svg(campaign.campaign_id)">
+					<span>{{ state.get_campaign_title(campaign.campaign_id) }}</span>
+				</div>
+				<div>
+					<lang-string-f lang-id="MOD_KMM_CAMPAIGN_CONTRIB_AMOUNT" :lang-arg-1="numberWithCommas(campaign.item_amount)"></lang-string-f>
+					<img class="skill-icon-xxs ml-1 mr-1" :src="state.get_item_icon(campaign.item_id)">
+				</div>
+				<div v-if="campaign.taken > 0">
+					<span class="font-w600">
+						<lang-string lang-id="MOD_KMM_CAMPAIGN_REWARDED"></lang-string>
+						<span>
+							<span class="mr-2">
+								<img class="skill-icon-xxs mr-1" src="assets/media/main/coins.svg">
+								<span class="font-w400 text-success">{{ numberWithCommas(campaign.taken) }}</span>
+							</span>
+						</span>
+					</span>
+				</div>
+				<button type="button" class="btn btn-success m-1" @click="state.claim_campaign_reward($event, campaign)" :key="campaign.id" v-else>
+					<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+					<lang-string lang-id="MOD_KMM_BUTTON_CLAIM_REWARD"></lang-string>
+				</button>
+			</div>
+		</div>
+		<div class="block tabbable w-100 kmm-col" v-if="state.campaign_history.length === 0">
+			<div class="p-4" v-else>
+				<lang-string lang-id="MOD_KMM_CAMPAIGN_NO_HISTORY"></lang-string>
+			</div>
+		</div>
+	</div>
+</template>
+<template id="template-kru-multiplayer-charity-page">
+	<div class="content d-none" id="kru-multiplayer-charity-page">
+		<div class="row row-deck gutters-tiny">
+			<div class="block block-rounded block-link-pop border-top kmm-charity-border border-4x w-100">
+				<div class="row row-deck gutters-tiny">
+					<div class="p-3 kmm-transfer-info">
+						<img class="skill-icon-xxs mr-1" :src="state.get_svg('charity_tree')">
+						<lang-string lang-id="MOD_KMM_CHARITY_WINDOW_INFO"></lang-string>
+					</div>
+				</div>
+			</div>
+			<div class="block block-rounded block-link-pop w-100" v-if="state.charity_bonus_unlocked">
+				<div class="row row-deck gutters-tiny">
+					<div class="p-3 kmm-transfer-info">
+						<img class="skill-icon-xxs mr-1" :src="state.get_svg('pet_charity_spirit')">
+						<lang-string lang-id="MOD_KMM_CHARITY_PET_INFO"></lang-string>
+					</div>
+				</div>
+			</div>
+			<div class="block tabbable w-100 kmm-col">
+				<template v-if="state.charity_tree_inventory.length > 0 && !state.charity_tree_loading">
+					<div class="block-content">
+						<div class="pb-4 row">
+							<kmm-item-icon v-for="item of state.charity_tree_inventory" class="bank-item pointer-enabled m-2" :data-item-id="item.id" :key="item.id">
+								<a role="button" @click="state.selected_charity_item_id = item.id">
+									<img class="bank-img p-3" :src="state.get_item_icon(item.id)" :class="{ 'border border-4x border-success': state.selected_charity_item_id === item.id }">
+									<div class="font-size-sm text-white text-center in-bank">
+										<small class="badge-pill bg-secondary">{{ formatNumber(item.qty) }}</small>
+									</div>
+								</a>
+							</kmm-item-icon>
+						</div>
+					</div>
+					<div class="p-3 kmm-transfer-buttons" v-if="state.can_take_charity">
+						<button type="button" class="btn btn-success m-1" @click="state.charity_take_item($event)">
+							<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+							<lang-string lang-id="MOD_KMM_BUTTON_TAKE_SELECTED"></lang-string>
+						</button>
+					</div>
+				</template>
+				<div class="p-4" v-else-if="state.charity_tree_loading">
+					<lang-string lang-id="MOD_KMM_CHARITY_LOADING"></lang-string>
+				</div>
+				<div class="p-4" v-else>
+					<lang-string lang-id="MOD_KMM_CHARITY_NO_ITEMS"></lang-string>
+				</div>
+			</div>
+		</div>
+	</div>
+</template>
+<template id="template-kru-multiplayer-transfer-page">
+	<div class="content d-none" id="kru-multiplayer-transfer-page">
+		<div class="row row-deck gutters-tiny">
+			<div class="block block-rounded block-link-pop border-top kmm-transfer-border border-4x w-100">
+				<div class="row row-deck gutters-tiny">
+					<div class="p-3 kmm-transfer-info">
+						<img class="skill-icon-xxs mr-1" :src="state.get_svg('transfer_bag')">
+						<lang-string lang-id="MOD_KMM_TRANSFER_WINDOW_INFO"></lang-string>
+					</div>
+				</div>
+			</div>
+			<div class="block tabbable w-100 kmm-col">
+				<div class="pl-3 pt-1 pb-1 bg-dark-bank-info text-center">
+					<div class="row gutters-tiny">
+						<div class="col-6 col-lg-3">
+							<span class="font-w400 font-size-sm mb-0">
+								<span class="font-w600">
+									<lang-string lang-id="MOD_KMM_TRANSFER_WINDOW_HEADER"></lang-string>
+								</span>
+							</span>
+						</div>
+						<div class="col-6 col-lg-3">
+							<span class="font-w400 font-size-sm mb-0">
+								<span class="font-w600">Space: </span><span>{{ state.transfer_inventory.length + ' / ' + state.TRANSFER_INVENTORY_MAX_LIMIT }}</span>
+							</span>
+						</div>
+						<div class="col-6 col-lg-3">
+							<span class="font-w400 font-size-sm mb-0 ml-3">
+								<span class="font-w600">
+									<lang-string lang-id="MOD_KMM_TRANSFER_VALUE"></lang-string>
+									<span>
+										<span class="mr-2">
+											<img class="skill-icon-xxs mr-1" src="assets/media/main/coins.svg">
+											<span class="font-w400">{{ state.transfer_inventory_value }}</span>
+										</span>
+									</span>
+								</span>
+							</span>
+						</div>
+					</div>
+				</div>
+				<template v-if="state.transfer_inventory.length > 0">
+					<div class="block-content">
+						<div class="pb-4 row">
+							<kmm-item-icon v-for="item of state.transfer_inventory" class="bank-item pointer-enabled m-2" :data-item-id="item.id" :key="item.id">
+								<a role="button" @click="state.selected_transfer_item_id = item.id">
+									<img class="bank-img p-3" :src="state.get_item_icon(item.id)" :class="{ 'border border-4x border-success': state.selected_transfer_item_id === item.id }">
+									<div class="font-size-sm text-white text-center in-bank">
+										<small class="badge-pill bg-secondary">{{ formatNumber(item.qty) }}</small>
+									</div>
+								</a>
+							</kmm-item-icon>
+						</div>
+					</div>
+					<div class="p-3 kmm-transfer-buttons">
+						<button type="button" class="btn btn-success m-1" @click="state.show_add_gp_modal()">
+							<lang-string lang-id="MOD_KMM_BUTTON_ADD_GP"></lang-string>
+						</button>
+						<button type="button" class="btn btn-success m-1" @click="state.create_trade()">
+							<lang-string-f lang-id="MOD_KMM_BUTTON_CREATE_TRADE" :lang-arg-1="state.transfer_inventory.length"></lang-string-f>
+						</button>
+						<button type="button" class="btn btn-success m-1" @click="state.gift_friend()">
+							<lang-string-f lang-id="MOD_KMM_BUTTON_GIFT_ITEMS" :lang-arg-1="state.transfer_inventory.length"></lang-string-f>
+						</button>
+						<button type="button" class="btn btn-success m-1" @click="state.donate_items($event)">
+							<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+							<lang-string-f lang-id="MOD_KMM_BUTTON_DONATE_ITEMS" :lang-arg-1="state.transfer_inventory.length"></lang-string-f>
+						</button>
+						<button type="button" class="btn btn-danger m-1" @click="state.transfer_return_selected()">
+							<lang-string lang-id="MOD_KMM_BUTTON_RETURN_SELECTED"></lang-string>
+						</button>
+						<button type="button" class="btn btn-danger m-1" @click="state.transfer_return_all()">
+							<lang-string lang-id="MOD_KMM_BUTTON_RETURN_ALL"></lang-string>
+						</button>
+					</div>
+				</template>
+				<div class="p-4" v-else>
+					<lang-string lang-id="MOD_KMM_TRANSFER_NO_ITEMS"></lang-string>
+				</div>
+			</div>
+			<div class="block block-rounded block-link-pop border-top kmm-exchange-border border-4x w-100 mt-5">
+				<div class="row row-deck gutters-tiny">
+					<div class="p-3 kmm-transfer-info">
+						<img class="skill-icon-xxs mr-1" :src="state.get_svg('multiplayer')">
+						<lang-string lang-id="MOD_KMM_EXCHANGE_WINDOW_INFO"></lang-string>
+					</div>
+				</div>
+			</div>
+			<div class="p-4 block w-100" v-if="state.num_active_transfers === 0">
+				<lang-string lang-id="MOD_KMM_NO_EXCHANGES"></lang-string>
+			</div>
+			<template v-for="gift in state.gifts">
+				<div class="block tabbable w-100 kmm-col" v-if="!!gift.data">
+					<div class="pl-3 pt-1 pb-1 bg-dark-bank-info text-center">
+						<div class="row gutters-tiny">
+							<div class="col-6 col-lg-3">
+								<span class="font-w400 font-size-sm mb-0">
+									<span class="font-w600">
+										<img class="skill-icon-xs" :src="state.get_item_icon(gift.data.sender.icon_id)"/>
+										<lang-string-f lang-id="MOD_KMM_TRANSFER_GIFT_SENDER" :lang-arg-1="gift.data.sender.display_name" v-if="!state.is_returned_gift(gift)"></lang-string-f>
+										<lang-string-f lang-id="MOD_KMM_TRANSFER_GIFT_RETURN_SENDER" :lang-arg-1="gift.data.sender.display_name" v-else></lang-string-f>
+									</span>
+								</span>
+							</div>
+							<div class="col-6 col-lg-3">
+								<span class="font-w400 font-size-sm mb-0 ml-3">
+									<span class="font-w600">
+										<lang-string lang-id="MOD_KMM_TRANSFER_VALUE"></lang-string>
+										<span>
+											<span class="mr-2">
+												<img class="skill-icon-xxs mr-1" src="assets/media/main/coins.svg">
+												<span class="font-w400">{{ state.get_transfer_value(gift) }}</span>
+											</span>
+										</span>
+									</span>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="block-content">
+						<div class="pb-4 row">
+							<kmm-item-icon v-for="item of gift.data.items" class="bank-item pointer-enabled m-2" :data-item-id="item.item_id" :key="item.item_id">
+								<a role="button">
+									<img class="bank-img p-3" :src="state.get_item_icon(item.item_id)">
+									<div class="font-size-sm text-white text-center in-bank">
+										<small class="badge-pill bg-secondary">{{ formatNumber(item.qty) }}</small>
+									</div>
+								</a>
+							</kmm-item-icon>
+						</div>
+					</div>
+					<div class="p-3 kmm-transfer-buttons">
+						<button type="button" class="btn btn-success m-1" @click="state.resolve_gift($event, gift.id, true)" :key="gift.id">
+							<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+							<lang-string lang-id="MOD_KMM_BUTTON_TAKE_ITEMS" v-if="state.is_returned_gift(gift)"></lang-string>
+							<lang-string lang-id="MOD_KMM_BUTTON_ACCEPT_GIFT" v-else></lang-string>
+						</button>
+						<button type="button" class="btn btn-danger m-1" @click="state.resolve_gift($event, gift.id, false)" v-if="!state.is_returned_gift(gift)" :key="gift.id">
+							<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+							<lang-string lang-id="MOD_KMM_BUTTON_DECLINE_GIFT"></lang-string>
+						</button>
+					</div>
+				</div>
+				<div class="block tabbable w-100 kmm-col" v-else>
+					<div class="p-4">
+						<lang-string lang-id="MOD_KMM_TRANSFER_LOADING_GIFT"></lang-string>
+					</div>
+				</div>
+			</template>
+			<template v-for="trade in state.resolved_trades">
+				<div class="block tabbable w-100 kmm-col" v-if="trade.data">
+					<div class="pl-3 pt-1 pb-1 bg-dark-bank-info text-center">
+						<div class="row gutters-tiny">
+							<div class="col-6 col-lg-3">
+								<span class="font-w400 font-size-sm mb-0">
+									<span class="font-w600">
+										<img class="skill-icon-xs" :src="state.get_item_icon(trade.data.other_player.icon_id)"/>
+										<lang-string-f lang-id="MOD_KMM_TRANSFER_TRADE_DECLINED" :lang-arg-1="trade.data.other_player.display_name" v-if="trade.data.declined"></lang-string-f>
+										<lang-string-f lang-id="MOD_KMM_TRANSFER_TRADE_COMPLETE" :lang-arg-1="trade.data.other_player.display_name" v-else></lang-string-f>
+									</span>
+								</span>
+							</div>
+							<div class="col-6 col-lg-3">
+								<span class="font-w400 font-size-sm mb-0 ml-3">
+									<span class="font-w600">
+										<lang-string lang-id="MOD_KMM_TRANSFER_VALUE"></lang-string>
+										<span>
+											<span class="mr-2">
+												<img class="skill-icon-xxs mr-1" src="assets/media/main/coins.svg">
+												<span class="font-w400">{{ state.get_transfer_value(trade) }}</span>
+											</span>
+										</span>
+									</span>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="block-content">
+						<div class="pb-4 row">
+							<kmm-item-icon v-for="item of trade.data.items" class="bank-item pointer-enabled m-2" :data-item-id="item.item_id" :key="item.item_id">
+								<a role="button">
+									<img class="bank-img p-3" :src="state.get_item_icon(item.item_id)">
+									<div class="font-size-sm text-white text-center in-bank">
+										<small class="badge-pill bg-secondary">{{ formatNumber(item.qty) }}</small>
+									</div>
+								</a>
+							</kmm-item-icon>
+						</div>
+					</div>
+					<div class="p-3 kmm-transfer-buttons">
+						<button type="button" class="btn btn-success m-1" @click="state.resolve_trade($event, trade.trade_id)" :key="trade.trade_id">
+							<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+							<lang-string lang-id="MOD_KMM_BUTTON_TAKE_ITEMS"></lang-string>
+						</button>
+					</div>
+				</div>
+				<div class="block tabbable w-100 kmm-col" v-else>
+					<div class="p-4">
+						<lang-string lang-id="MOD_KMM_TRANSFER_LOADING_TRADE"></lang-string>
+					</div>
+				</div>
+			</template>
+			<template v-for="trade in state.sorted_trades">
+				<div class="block tabbable w-100 kmm-col" v-if="!!trade.data">
+					<div class="pl-3 pt-1 pb-1 bg-dark-bank-info text-center">
+						<div class="row gutters-tiny">
+							<div class="col-6 col-lg-3">
+								<span class="font-w400 font-size-sm mb-0">
+									<span class="font-w600">
+										<img class="skill-icon-xs" :src="state.get_item_icon(trade.data.other_player.icon_id)"/>
+										<lang-string-f lang-id="MOD_KMM_TRANSFER_TRADE_FROM" :lang-arg-1="trade.data.other_player.display_name" v-if="trade.attending"></lang-string-f>
+										<lang-string-f lang-id="MOD_KMM_TRANSFER_TRADE_SENT" :lang-arg-1="trade.data.other_player.display_name" v-else></lang-string-f>
+									</span>
+								</span>
+							</div>
+							<div class="col-6 col-lg-3" v-if="trade.state === 0">
+								<span class="font-w400 font-size-sm mb-0 ml-3">
+									<span class="font-w600">
+										<lang-string lang-id="MOD_KMM_TRANSFER_VALUE"></lang-string>
+										<span>
+											<span class="mr-2">
+												<img class="skill-icon-xxs mr-1" src="assets/media/main/coins.svg">
+												<span class="font-w400">{{ state.get_transfer_value(trade) }}</span>
+											</span>
+										</span>
+									</span>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="block-content">
+						<div class="pb-4 kmm-dual-trade" v-if="trade.state === 1">
+							<div class="kmm-dual-trade-panel">
+								<div class="kmm-dual-trade-header">
+									<h5>
+										<img class="skill-icon-xs" :src="state.get_item_icon(state.profile_icon)"/>
+										<lang-string lang-id="MOD_KMM_TRANSFER_HEADER_HOME"></lang-string>
+									</h5>
+									<span class="font-w600">
+										<lang-string lang-id="MOD_KMM_TRANSFER_VALUE"></lang-string>
+										<span>
+											<span class="mr-2">
+												<img class="skill-icon-xxs mr-1" src="assets/media/main/coins.svg">
+												<span class="font-w400">{{ state.get_trade_items_value(state.filter_trade_items_home(trade)) }}</span>
+											</span>
+										</span>
+									</span>
+								</div>
+								<div class="kmm-dual-trade-items">
+									<kmm-item-icon v-for="item of state.filter_trade_items_home(trade)" class="bank-item pointer-enabled m-2" :data-item-id="item.item_id" :key="item.item_id">
+										<a role="button">
+											<img class="bank-img p-3" :src="state.get_item_icon(item.item_id)">
+											<div class="font-size-sm text-white text-center in-bank">
+												<small class="badge-pill bg-secondary">{{ formatNumber(item.qty) }}</small>
+											</div>
+										</a>
+									</kmm-item-icon>
+								</div>
+							</div>
+							<div class="kmm-dual-trade-divider"></div>
+							<div class="kmm-dual-trade-panel">
+								<div class="kmm-dual-trade-header">
+									<h5>
+										<img class="skill-icon-xs" :src="state.get_item_icon(trade.data.other_player.icon_id)"/>
+										<lang-string-f lang-id="MOD_KMM_TRANSFER_HEADER_AWAY" :lang-arg-1="trade.data.other_player.display_name"></lang-string-f>
+									</h5>
+									<span class="font-w600">
+										<lang-string lang-id="MOD_KMM_TRANSFER_VALUE"></lang-string>
+										<span>
+											<span class="mr-2">
+												<img class="skill-icon-xxs mr-1" src="assets/media/main/coins.svg">
+												<span class="font-w400">{{ state.get_trade_items_value(state.filter_trade_items_away(trade)) }}</span>
+											</span>
+										</span>
+									</span>
+								</div>
+								<div class="kmm-dual-trade-items">
+									<kmm-item-icon v-for="item of state.filter_trade_items_away(trade)" class="bank-item pointer-enabled m-2" :data-item-id="item.item_id" :key="item.item_id">
+										<a role="button">
+											<img class="bank-img p-3" :src="state.get_item_icon(item.item_id)">
+											<div class="font-size-sm text-white text-center in-bank">
+												<small class="badge-pill bg-secondary">{{ formatNumber(item.qty) }}</small>
+											</div>
+										</a>
+									</kmm-item-icon>
+								</div>
+							</div>
+						</div>
+						<div class="pb-4 row" v-else>
+							<kmm-item-icon v-for="item of trade.data.items" class="bank-item pointer-enabled m-2" :data-item-id="item.item_id" :key="item.item_id">
+								<a role="button">
+									<img class="bank-img p-3" :src="state.get_item_icon(item.item_id)">
+									<div class="font-size-sm text-white text-center in-bank">
+										<small class="badge-pill bg-secondary">{{ formatNumber(item.qty) }}</small>
+									</div>
+								</a>
+							</kmm-item-icon>
+						</div>
+					</div>
+					<div class="p-3 kmm-transfer-buttons">
+						<template v-if="trade.attending">
+							<button v-if="trade.state === 0" type="button" class="btn btn-success m-1" @click="state.counter_trade($event, trade.trade_id)" :key="trade.trade_id">
+								<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+								<lang-string-f lang-id="MOD_KMM_BUTTON_COUNTER_TRADE" :lang-arg-1="state.transfer_inventory.length"></lang-string-f>
+							</button>
+							<button v-else-if="trade.state === 1" type="button" class="btn btn-success m-1" @click="state.accept_trade($event, trade.trade_id)" :key="trade.trade_id">
+								<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+								<lang-string lang-id="MOD_KMM_BUTTON_ACCEPT_TRADE"></lang-string>
+							</button>
+							<button type="button" class="btn btn-danger m-1" @click="state.decline_trade($event, trade.trade_id)" :key="trade.trade_id">
+								<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+								<lang-string lang-id="MOD_KMM_BUTTON_DECLINE_TRADE"></lang-string>
+							</button>
+						</template>
+						<template v-else>
+							<button type="button" class="btn btn-danger m-1" @click="state.cancel_trade($event, trade.trade_id)" :key="trade.trade_id">
+								<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+								<lang-string lang-id="MOD_KMM_BUTTON_CANCEL_TRADE"></lang-string>
+							</button>
+						</template>
+					</div>
+				</div>
+				<div class="block tabbable w-100 kmm-col" v-else>
+					<div class="p-4">
+						<lang-string lang-id="MOD_KMM_TRANSFER_LOADING_TRADE"></lang-string>
+					</div>
+				</div>
+			</template>
+		</div>
+	</div>
+</template>
+<template id="template-kru-multiplayer-gift-friend-modal">
+	<div class="kmm-friends" v-if="state.friends.length > 0">
+		<div v-for="friend in state.friends" class="kmm-friend">
+			<img class="skill-icon-xs" :src="state.get_item_icon(friend.icon_id)"/>
+			<span>{{ friend.display_name }}</span>
+			<button type="button" class="btn btn-success" @click="state.select_gift_recipient(friend)">
+				<lang-string lang-id="MOD_KMM_BUTTON_SELECT"></lang-string>
+			</button>
+		</div>
+	</div>
+	<div class="kmm-modal-text" v-else>
+		<lang-string lang-id="MOD_KMM_MODAL_NO_FRIENDS"></lang-string>
+	</div>
+	<button type="button" class="btn btn-danger" @click="state.close_modal()">
+		<lang-string lang-id="MOD_KMM_BUTTON_CANCEL"></lang-string>
+	</button>
+</template>
+<template id="template-kru-multiplayer-create-trade-modal">
+	<div class="kmm-friends" v-if="state.friends.length > 0">
+		<div v-for="friend in state.friends" class="kmm-friend">
+			<img class="skill-icon-xs" :src="state.get_item_icon(friend.icon_id)"/>
+			<span>{{ friend.display_name }}</span>
+			<button type="button" class="btn btn-success" @click="state.select_trade_recipient(friend)">
+				<lang-string lang-id="MOD_KMM_BUTTON_SELECT"></lang-string>
+			</button>
+		</div>
+	</div>
+	<div class="kmm-modal-text" v-else>
+		<lang-string lang-id="MOD_KMM_MODAL_NO_FRIENDS"></lang-string>
+	</div>
+	<button type="button" class="btn btn-danger" @click="state.close_modal()">
+		<lang-string lang-id="MOD_KMM_BUTTON_CANCEL"></lang-string>
+	</button>
+</template>
+<template id="template-kru-multiplayer-confirm-gift-recipient-modal">
+	<div class="kmm-modal-text">
+		<lang-string-f lang-id="MOD_KMM_MODAL_DESC_CONFIRM_GIFT" :lang-arg-1="state.gifting_friend.display_name"></lang-string-f>
+		<lang-string lang-id="MOD_KMM_MODAL_DESC_GIFT_VALUE"></lang-string>
+		<span class="mr-2">
+			<img class="skill-icon-xxs mr-1" src="assets/media/main/coins.svg">
+			<span class="font-w400">{{ state.transfer_inventory_value }}</span>
+		</span>
+	</div>
+	<button type="button" class="btn btn-success" @click="state.confirm_gift($event)">
+		<div class="spinner-border spinner-border-sm text-primary mr-2 d-none" role="status"></div>
+		<lang-string lang-id="MOD_KMM_BUTTON_SEND_GIFT"></lang-string>
+	</button>
+	<button type="button" class="btn btn-danger" @click="state.close_modal()">
+		<lang-string lang-id="MOD_KMM_BUTTON_CANCEL"></lang-string>
+	</button>
+</template>

@@ -1,0 +1,63 @@
+{
+	"$schema": "https://melvoridle.com/assets/schema/gameData.json",
+	"data": {
+		"pages": [
+			{
+				"id": "Transfer_Items",
+				"customName": "Trade / Gift",
+				"media": "assets/transfer_bag.svg",
+				"containerID": "kru-multiplayer-transfer-page",
+				"headerBgClass": "kmm-transfer-bg",
+				"hasGameGuide": false,
+				"canBeDefault": false,
+				"sidebarItem": {
+					"categoryID": "Multiplayer",
+					"icon": "assets/transfer_bag.svg",
+					"asideClass": "kmm-transfer-nav",
+					"aside": "?? / ??"
+				}
+			},
+			{
+				"id": "Multiplayer_Market",
+				"customName": "Marketplace",
+				"media": "assets/market.svg",
+				"containerID": "kru-multiplayer-market-page",
+				"headerBgClass": "kmm-market-bg",
+				"hasGameGuide": false,
+				"canBeDefault": false,
+				"sidebarItem": {
+					"categoryID": "Multiplayer",
+					"icon": "assets/market.svg"
+				}
+			},
+			{
+				"id": "Charity_Tree",
+				"customName": "The Charitree",
+				"media": "assets/charity_tree.svg",
+				"containerID": "kru-multiplayer-charity-page",
+				"headerBgClass": "kmm-charity-bg",
+				"hasGameGuide": false,
+				"canBeDefault": false,
+				"sidebarItem": {
+					"categoryID": "Multiplayer",
+					"icon": "assets/charity_tree.svg"
+				}
+			},
+			{
+				"id": "Campaign_Effort",
+				"customName": "Campaign",
+				"media": "assets/campaigns.svg",
+				"containerID": "kru-multiplayer-campaign-page",
+				"headerBgClass": "kmm-campaign-bg",
+				"hasGameGuide": false,
+				"canBeDefault": false,
+				"sidebarItem": {
+					"categoryID": "Multiplayer",
+					"icon": "assets/campaigns.svg",
+					"asideClass": "kmm-campaign-nav",
+					"aside": "Inactive"
+				}
+			}
+		]
+	}
+}
