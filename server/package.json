@@ -12,8 +12,8 @@
 			"bun install"
 		],
 		"canary": {
-			"account": "kruithne",
-			"repository": "kruithne/melvor_multiplayer",
+			"account": "JoblessSF",
+			"repository": "JoblessSF/melvor_multiplayer",
 			"crash_console_history": 64,
 			"labels": ["⚠️ canary-report"],
 			"throttle": 86400
