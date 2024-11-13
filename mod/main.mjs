@@ -1,5 +1,5 @@
 // #region CONSTANTS
-const SERVER_HOST = 'https://melvormultiplayer.net';
+const SERVER_HOST = 'http://localhost:3000';
 const LOG_PREFIX = '[multiplayer] ';
 
 const IS_DEV_MODE = false;
