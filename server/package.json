@@ -1,5 +1,5 @@
 {
-	"name": "http://10.0.2.15:3000",
+	"name": "http://192.168.254.69:3000",
 	"type": "module",
 	"module": "index.ts",
 	"spooder": {
